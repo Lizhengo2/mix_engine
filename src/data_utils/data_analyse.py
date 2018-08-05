@@ -18,6 +18,7 @@ class DataAnalyse:
             self.num_regex = "^[+-]*[0-9]+.*[0-9]*$"
             self.pun_regex = "^[^a-zA-Z0-9']*$"
             self.stress_letters = "áéíóúü"
+            self.no_stress_letters = "aeiouu"
             self.en_es_regex = "^[a-zA-Z'áéíóúüñ]+$"
 
             id = 0
@@ -135,6 +136,10 @@ class DataAnalyse:
         print("first language : second language ratio is :", ratio)
         # print(sorted(same_words.items(), key=lambda d: d[1], reverse=True))
         # print(sorted(unk_words.items(), key=lambda d: d[1], reverse=True))
+        # for (word, freq) in sorted(same_words.items(), key=lambda d: d[1], reverse=True):
+        #     print(word)
+        # for (word, freq) in sorted(same_words.items(), key=lambda d: d[1], reverse=True):
+        #     print(freq)
 
     def calc_stress_ratio(self, test_file):
 
@@ -152,7 +157,8 @@ class DataAnalyse:
 
                 if word not in self.emojis_token2id_in_words and re.match(self.en_es_regex, word):
                     total_count += 1
-                    if word not in self.es_US_token2id_in_words and word.lower() not in self.es_US_token2id_in_words:
+                    if word not in self.es_US_token2id_in_words and word.lower() not in self.es_US_token2id_in_words and \
+                            word not in self.en_US_token2id_in_words and word.lower() not in self.en_US_token2id_in_words:
                         unk_count += 1
                         stress_word = self.is_stress_es_word(word.lower())
                         if stress_word is not None:
@@ -165,7 +171,7 @@ class DataAnalyse:
                                 stress_words[word.lower() + "->" + stress_word] = 1
                             else:
                                 stress_words[word.lower() + "->" + stress_word] += 1
-                    else:
+                    if word in self.es_US_token2id_in_words or word.lower() in self.es_US_token2id_in_words:
                         not_unk_count += 1
                         for letter in word:
                             if letter in self.stress_letters:
@@ -182,7 +188,11 @@ class DataAnalyse:
         print("stress words from data count :", stress_words_from_data/not_unk_count)
         print(stress_words_from_data, not_unk_count)
 
-        print(sorted(stress_words.items(), key=lambda d: d[1], reverse=True))
+        # for (word, freq) in sorted(stress_words.items(), key=lambda d: d[1], reverse=True):
+        #     print(word)
+        # for (word, freq) in sorted(stress_words.items(), key=lambda d: d[1], reverse=True):
+        #     print(freq)
+        # print(sorted(stress_words.items(), key=lambda d: d[1], reverse=True))
 
     def calc_id_count(self, min, max, id_list):
         count = 0
@@ -244,6 +254,14 @@ class DataAnalyse:
         f.close()
         print("mix_sentences_ratio :", mix_line/total_line)
 
+    def stress_letter_replace(self, word):
+        if len(word) > 0:
+            for (stress_letter, no_stress_letter) in zip(self.stress_letters, self.no_stress_letters):
+                word = word.replace(stress_letter, no_stress_letter)
+            return word
+        else:
+            return None
+
     def words_freq_diff(self, en_file, es_file, vocab="en_US"):
         f_en = open(en_file, "r")
         f_es = open(es_file, "r")
@@ -274,10 +292,71 @@ class DataAnalyse:
 
         for word in word_freq_dict_in_es_language:
             if word in word_freq_dict_in_en_language:
-                if word_freq_dict_in_es_language[word] >= 10 * word_freq_dict_in_en_language[word]:
-                    print(word, word_freq_dict_in_es_language[word], word_freq_dict_in_en_language[word])
-            else:
-                print(word, word_freq_dict_in_es_language[word])
+                if word_freq_dict_in_es_language[word] >= 5 * word_freq_dict_in_en_language[word] or \
+                   word_freq_dict_in_en_language[word] >= 5 * word_freq_dict_in_es_language[word]:
+                    if word_freq_dict_in_es_language[word] >= 10 and word_freq_dict_in_en_language[word] >= 10:
+                        print(word, "; en_US freq :", word_freq_dict_in_en_language[word],
+                              "es_US freq :", word_freq_dict_in_es_language[word])
+            no_stress_word = self.stress_letter_replace(word)
+
+            if no_stress_word != word and no_stress_word in word_freq_dict_in_en_language :
+                if word_freq_dict_in_es_language[word] >= 5 * word_freq_dict_in_en_language[no_stress_word] or \
+                   word_freq_dict_in_en_language[no_stress_word] >= 5 * word_freq_dict_in_es_language[word]:
+                    if word_freq_dict_in_es_language[word] >= 10 and word_freq_dict_in_en_language[no_stress_word] >= 10:
+                        print(no_stress_word, "->", word, "; en_US freq :", word_freq_dict_in_es_language[no_stress_word],
+                              "es_US freq :", word_freq_dict_in_es_language[word])
+
+            if word not in word_freq_dict_in_en_language:
+                if word_freq_dict_in_es_language[word] >= 100:
+                    print(word, word_freq_dict_in_es_language[word], 0)
+
+    def vocab_same_count(self, min, max, vocab, data_vocab):
+        count = 0
+        for id in range(min, max):
+            if id < len(data_vocab):
+                word, count = data_vocab[id]
+                if word in vocab[min: max]:
+                    print(word)
+                    count += 1
+
+        return count
+
+    def vocab_freq_diff(self, test_file, en_US=True):
+
+        f = open(test_file, "r")
+        vocab = self.en_US_token2id_in_words if en_US else self.es_US_token2id_in_words
+        words_dict = dict()
+
+        for line in f:
+            words = line.strip().split()
+            for word in words:
+                if word not in self.emojis_token2id_in_words:
+                    if word in vocab:
+                        if word in words_dict:
+                            words_dict[word] += 1
+                        else:
+                            words_dict[word] = 1
+                    elif word.lower() in vocab:
+                        if word.lower() in words_dict:
+                            words_dict[word.lower()] += 1
+                        else:
+                            words_dict[word.lower()] = 1
+
+        f.close()
+        data_vocab = sorted(words_dict.items(), key=lambda d: d[1], reverse=True)
+        print(data_vocab)
+        print("data vocab size :", len(data_vocab))
+
+        vocab = list(vocab)
+        same_count_1_to_2000 = self.vocab_same_count(0, 2000, vocab, data_vocab)
+        same_count_2000_to_5000 = self.vocab_same_count(2000, 5000, vocab, data_vocab)
+        same_count_5000_to_10000 = self.vocab_same_count(5000, 10000, vocab, data_vocab)
+        same_count_10000_to_20000 = self.vocab_same_count(10000, 20000, vocab, data_vocab)
+
+        print("same_rate_1_to_2000 :", same_count_1_to_2000/2000)
+        print("same_rate_2000_to_5000 :", same_count_2000_to_5000/3000)
+        print("same_rate_5000_to_10000 :", same_count_5000_to_10000/5000)
+        print("same_rate_10000_to_20000 :", same_count_10000_to_20000/10000)
 
 
 if __name__ == "__main__":
@@ -295,5 +374,6 @@ if __name__ == "__main__":
     # data_analyse.sentence_filter(test_file, en_US_first=True)
     # data_analyse.calc_ratio(test_file, en_US_first=True)
     # data_analyse.calc_stress_ratio(test_file)
-    data_analyse.words_freq_diff(en_file, es_file, vocab="es_US")
+    # data_analyse.words_freq_diff(en_file, es_file, vocab="en_US")
+    data_analyse.vocab_freq_diff(test_file, en_US=True)
 
