@@ -1,0 +1,70 @@
+Contreras	Cebuano	Spanish	Tagalog
+Che	Spanish
+Maldonado	Spanish
+Pancho	Spanish
+Gerardo	Cebuano	Italian	Portuguese	Spanish
+Alejandra	Spanish
+Gustavo	Italian	Portuguese	Spanish
+Bernardino	Italian	Portuguese	Spanish
+Delgado	Spanish
+exo	French	Spanish
+Esteban	Spanish
+Leticia	Spanish
+Ortega	Spanish	Tagalog
+Aguilar	Spanish	Tagalog
+Alvarado	Cebuano	Spanish	Tagalog
+sms	Danish	Dutch	Spanish	Swedish
+Sosa	Cebuano	Spanish	Tagalog	Waray-Waray
+ferris	Catalan	Galician	Latin	Spanish
+Reina	Latvian	Spanish
+Maribel	Cebuano	Spanish
+Vargas	Spanish
+Eduardo	Cebuano	Esperanto	Italian	Portuguese	Spanish
+Alberto	Cebuano	Esperanto	Italian	Latin	Portuguese	Spanish	Tagalog
+Arturo	Cebuano	Esperanto	Italian	Portuguese	Spanish
+Pepe	Italian	Spanish
+winchester	French	Spanish
+Felipe	Portuguese	Spanish
+Marisol	Spanish
+Rafael	Catalan	Faroese	Finnish	German	Portuguese	Spanish	Swedish
+Mendoza	Basque	Cebuano	Spanish	Tagalog
+Roberto	Esperanto	Italian	Latin	Lithuanian	Portuguese	Spanish	Tagalog
+Enrique	Cebuano	Portuguese	Spanish
+Elisa	Danish	Faroese	Finnish	German	Italian	Latin	Spanish
+Armando	Dutch	Italian	Portuguese	Spanish
+Mateo	Cebuano	Spanish	Tagalog
+Camila	Portuguese	Spanish
+Blanca	Spanish
+Luz	Cebuano	Portuguese	Spanish
+mes	Afrikaans	Albanian	Aromanian	Asturian	Catalan	Dutch	French	Galician	Gothic	Kalasha	Latvian	Lithuanian	Occitan	Old French	Old Occitan	Old Prussian	Portuguese	Rohingya	Romansch	Spanish	Swedish
+madre	Asturian	Cebuano	Chavacano	Galician	Italian	Ladino	Old Portuguese	Portuguese	Spanish	Tagalog
+Ruiz	Spanish
+Emilio	Italian	Spanish
+Moreno	Spanish	Tagalog
+Castillo	Cebuano	Spanish	Tagalog
+Cristina	Catalan	Italian	Portuguese	Spanish
+Morales	Cebuano	Hiligaynon	Spanish	Tagalog
+bien	Asturian	Danish	French	Japanese	Ladino	Middle French	Norwegian Bokmål	Old French	Spanish	Volapük
+Santana	Portuguese	Spanish
+Ramos	Ilocano	Spanish	Tagalog
+Geo	Spanish
+carne	Aromanian	Asturian	French	Galician	Italian	Latin	Lower Sorbian	Old Portuguese	Portuguese	Romanian	Spanish
+tete	French	Japanese	Kapampangan	Latin	Spanish	Tok Pisin	Venetian
+familia	Translingual	Asturian	Esperanto	Galician	Interlingua	Ladin	Latin	Portuguese	Romanian	Spanish	Swahili
+deja	Latvian	Lithuanian	Romanian	Spanish
+Noe	Czech	Latin	Slovak	Spanish	Tagalog
+uno	Italian	Ladino	Latin	Portuguese	Spanish	Tagalog	Võro	Wauja	Welsh
+Lorenzo	Italian	Spanish
+Javier	Cebuano	Spanish
+Pablo	Spanish
+Sergio	Cebuano	Italian	Portuguese	Spanish
+Marcos	Asturian	Cebuano	Portuguese	Spanish	Tagalog
+Julio	Esperanto	Spanish
+bueno	Ladino	Spanish
+wawa	Aymara	Chinook Jargon	Italian	Mwani	Quechua	Spanish	Tagalog
+Jorge	Cebuano	Portuguese	Spanish
+Ana	Portuguese	Romanian	Serbo-Croatian	Slovene	Spanish
+Rico	Spanish
+versa	French	Italian	Latin	Norwegian Bokmål	Norwegian Nynorsk	Portuguese	Spanish
+Papa	Translingual	Catalan	German	Spanish	Tagalog
+Juan	Classical Nahuatl	Manx	Spanish	Tagalog

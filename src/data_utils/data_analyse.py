@@ -6,7 +6,8 @@ import sys
 
 
 class DataAnalyse:
-    def __init__(self, en_US_vocab_file=None, es_US_vocab_file=None, emojis_file=None, stress_word_map_file=None):
+    def __init__(self, en_US_vocab_file=None, es_US_vocab_file=None, emojis_file=None, stress_word_map_file=None,
+                 en_uniGram=None, es_uniGram=None):
 
         if en_US_vocab_file and es_US_vocab_file and emojis_file:
             self.en_US_id2token_in_words, self.es_US_id2token_in_words, self.emojis_id2token_in_words = {}, {}, {}
@@ -60,6 +61,31 @@ class DataAnalyse:
                     if no_stress_word not in self.stress_word_map:
                         self.stress_word_map[no_stress_word] = stress_word
             print("stress word vocabulary size =", str(len(self.stress_word_map)))
+
+        if en_uniGram and es_uniGram:
+            self.en_uniGram, self.es_uniGram = [], []
+
+            with open(en_uniGram, mode="r") as f:
+                for line in f:
+                    line = line.strip()[1:-1]
+                    res = line.split(",")
+                    if len(res) == 2:
+                        token, id = res
+                        if token not in self.emojis_token2id_in_words and token in self.en_US_token2id_in_words:
+                            self.en_uniGram.append(token)
+
+            print("en US uniGram size =", str(len(self.en_uniGram)))
+
+            with open(es_uniGram, mode="r") as f:
+                for line in f:
+                    line = line.strip()[1:-1]
+                    res = line.split(",")
+                    if len(res) == 2:
+                        token, id = res
+                        if token not in self.emojis_token2id_in_words and token in self.es_US_token2id_in_words:
+                            self.es_uniGram.append(token)
+
+            print("es US uniGram size =", str(len(self.es_uniGram)))
 
     def is_mixed_corpus(self, words):
         for word in words:
@@ -312,12 +338,9 @@ class DataAnalyse:
 
     def vocab_same_count(self, min, max, vocab, data_vocab):
         count = 0
-        for id in range(min, max):
-            if id < len(data_vocab):
-                word, count = data_vocab[id]
-                if word in vocab[min: max]:
-                    print(word)
-                    count += 1
+        for (word, key) in data_vocab:
+            if word in vocab[min: max]:
+                count += 1
 
         return count
 
@@ -325,6 +348,7 @@ class DataAnalyse:
 
         f = open(test_file, "r")
         vocab = self.en_US_token2id_in_words if en_US else self.es_US_token2id_in_words
+        uniGram = self.en_uniGram if en_US else self.es_uniGram
         words_dict = dict()
 
         for line in f:
@@ -346,17 +370,18 @@ class DataAnalyse:
         data_vocab = sorted(words_dict.items(), key=lambda d: d[1], reverse=True)
         print(data_vocab)
         print("data vocab size :", len(data_vocab))
+        print("2000th word and freq :", data_vocab[2000])
 
-        vocab = list(vocab)
-        same_count_1_to_2000 = self.vocab_same_count(0, 2000, vocab, data_vocab)
-        same_count_2000_to_5000 = self.vocab_same_count(2000, 5000, vocab, data_vocab)
-        same_count_5000_to_10000 = self.vocab_same_count(5000, 10000, vocab, data_vocab)
-        same_count_10000_to_20000 = self.vocab_same_count(10000, 20000, vocab, data_vocab)
+        data_vocab = data_vocab[:2000]
+        same_count_1_to_2000 = self.vocab_same_count(0, 2000, uniGram, data_vocab)
+        same_count_2000_to_5000 = self.vocab_same_count(2000, 5000, uniGram, data_vocab)
+        same_count_5000_to_10000 = self.vocab_same_count(5000, 10000, uniGram, data_vocab)
+        same_count_10000_to_20000 = self.vocab_same_count(10000, 20000, uniGram, data_vocab)
 
         print("same_rate_1_to_2000 :", same_count_1_to_2000/2000)
-        print("same_rate_2000_to_5000 :", same_count_2000_to_5000/3000)
-        print("same_rate_5000_to_10000 :", same_count_5000_to_10000/5000)
-        print("same_rate_10000_to_20000 :", same_count_10000_to_20000/10000)
+        print("same_rate_2000_to_5000 :", same_count_2000_to_5000/2000)
+        print("same_rate_5000_to_10000 :", same_count_5000_to_10000/2000)
+        print("same_rate_10000_to_20000 :", same_count_10000_to_20000/2000)
 
 
 if __name__ == "__main__":
@@ -369,11 +394,13 @@ if __name__ == "__main__":
     stress_word_map_file = args[5]
     en_file = args[6]
     es_file = args[7]
-    data_analyse = DataAnalyse(en_US_vocab_file, es_US_vocab_file, emojis_file, stress_word_map_file)
+    en_uniGram = args[8]
+    es_uniGram = args[9]
+    data_analyse = DataAnalyse(en_US_vocab_file, es_US_vocab_file, emojis_file, stress_word_map_file, en_uniGram, es_uniGram)
     data_analyse.diff_vocab()
     # data_analyse.sentence_filter(test_file, en_US_first=True)
     # data_analyse.calc_ratio(test_file, en_US_first=True)
     # data_analyse.calc_stress_ratio(test_file)
     # data_analyse.words_freq_diff(en_file, es_file, vocab="en_US")
-    data_analyse.vocab_freq_diff(test_file, en_US=True)
+    data_analyse.vocab_freq_diff(test_file, en_US=False)
 
