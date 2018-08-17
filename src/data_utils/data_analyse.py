@@ -383,6 +383,119 @@ class DataAnalyse:
         print("same_rate_5000_to_10000 :", same_count_5000_to_10000/2000)
         print("same_rate_10000_to_20000 :", same_count_10000_to_20000/2000)
 
+    def combination_filter(self, file_in, file_out):
+
+        f = open(file_in, "r")
+        en2es_combines = dict()
+        es2en_combines = dict()
+
+        for line in f:
+            words = line.strip().split()
+            for i in range(len(words) - 1):
+                pre_word = words[i]
+                later_word = words[i+1]
+                if pre_word not in self.emojis_token2id_in_words and later_word not in self.emojis_token2id_in_words:
+                    if pre_word in self.en_US_token2id_in_words and later_word not in self.en_US_token2id_in_words:
+                        if later_word in self.es_US_token2id_in_words and pre_word not in self.es_US_token2id_in_words:
+                            en2es_combine = pre_word + " " + later_word
+                            if en2es_combine in en2es_combines:
+                                en2es_combines[en2es_combine] += 1
+                            else:
+                                en2es_combines[en2es_combine] = 1
+                    if later_word in self.en_US_token2id_in_words and pre_word not in self.en_US_token2id_in_words:
+                        if pre_word in self.es_US_token2id_in_words and later_word not in self.es_US_token2id_in_words:
+                            es2en_combine = pre_word + " " + later_word
+                            if es2en_combine in es2en_combines:
+                                es2en_combines[es2en_combine] += 1
+                            else:
+                                es2en_combines[es2en_combine] = 1
+
+        f.close()
+        en2es_combines = sorted(en2es_combines.items(), key=lambda d: d[1], reverse=True)
+        es2en_combines = sorted(es2en_combines.items(), key=lambda d: d[1], reverse=True)
+        print(en2es_combines[:50])
+        print(es2en_combines[:50])
+
+    def mix_corpus_filter(self, file_in, file_out):
+
+        f = open(file_in, "r")
+        en2es_sentences = []
+        es2en_sentences = []
+        en2es_and_es2en_sentences = []
+
+        for line in f:
+            words = line.strip().split()
+            is_en2es = False
+            is_es2en = False
+
+            for i in range(1, len(words)):
+                word = words[i]
+                if word in self.es_US_token2id_in_words and word not in self.en_US_token2id_in_words:
+                    break
+            pre_sentence = words[:i]
+            later_sentence = words[i:]
+
+            is_pre_match = False
+            is_later_match = False
+            if len(pre_sentence) > 0 and len(later_sentence) > 0:
+                for word in pre_sentence:
+                    if word in self.en_US_token2id_in_words and word not in self.es_US_token2id_in_words:
+                        is_pre_match = True
+                    if word in self.es_US_token2id_in_words and word not in self.en_US_token2id_in_words:
+                        is_pre_match = False
+                        break
+
+                if is_pre_match:
+                    for word in later_sentence:
+                        if word in self.es_US_token2id_in_words and word not in self.en_US_token2id_in_words:
+                            is_later_match = True
+                        if word in self.en_US_token2id_in_words and word not in self.es_US_token2id_in_words:
+                            is_later_match = False
+                            break
+            if is_pre_match and is_later_match:
+                is_en2es = True
+
+            is_pre_match = False
+            is_later_match = False
+            for i in range(1, len(words)):
+                word = words[i]
+                if word in self.en_US_token2id_in_words and word not in self.es_US_token2id_in_words:
+                    break
+            pre_sentence = words[:i]
+            later_sentence = words[i:]
+            if len(pre_sentence) > 0 and len(later_sentence) > 0:
+                for word in pre_sentence:
+                    if word in self.es_US_token2id_in_words and word not in self.en_US_token2id_in_words:
+                        is_pre_match = True
+                    if word in self.en_US_token2id_in_words and word not in self.es_US_token2id_in_words:
+                        is_pre_match = False
+                        break
+                if is_pre_match:
+                    for word in later_sentence:
+                        if word in self.en_US_token2id_in_words and word not in self.es_US_token2id_in_words:
+                            is_later_match = True
+                        if word in self.es_US_token2id_in_words and word not in self.en_US_token2id_in_words:
+                            is_later_match = False
+                            break
+
+            if is_pre_match and is_later_match:
+                is_es2en = True
+
+            if is_en2es:
+                en2es_sentences.append(line)
+            if is_es2en:
+                es2en_sentences.append(line)
+            if is_es2en and is_en2es:
+                en2es_and_es2en_sentences.append(line)
+
+        f.close()
+        print("en2es count:", len(en2es_sentences))
+        print(en2es_sentences[:50])
+        print("es2en count:", len(es2en_sentences))
+        print(es2en_sentences[:50])
+        print("en2es and es2en count:", len(en2es_and_es2en_sentences))
+        print(en2es_and_es2en_sentences[:50])
+
 
 if __name__ == "__main__":
     args = sys.argv
@@ -392,15 +505,18 @@ if __name__ == "__main__":
     en_US_vocab_file = args[3]
     es_US_vocab_file = args[4]
     stress_word_map_file = args[5]
-    en_file = args[6]
-    es_file = args[7]
-    en_uniGram = args[8]
-    es_uniGram = args[9]
+    # en_file = args[6]
+    # es_file = args[7]
+    en_uniGram = args[6]
+    es_uniGram = args[7]
+    file_out = args[8]
     data_analyse = DataAnalyse(en_US_vocab_file, es_US_vocab_file, emojis_file, stress_word_map_file, en_uniGram, es_uniGram)
-    data_analyse.diff_vocab()
+    # data_analyse.diff_vocab()
     # data_analyse.sentence_filter(test_file, en_US_first=True)
     # data_analyse.calc_ratio(test_file, en_US_first=True)
     # data_analyse.calc_stress_ratio(test_file)
     # data_analyse.words_freq_diff(en_file, es_file, vocab="en_US")
-    data_analyse.vocab_freq_diff(test_file, en_US=False)
+    # data_analyse.vocab_freq_diff(test_file, en_US=False)
+    # data_analyse.combination_filter(test_file, file_out)
+    data_analyse.mix_corpus_filter(test_file, file_out)
 
