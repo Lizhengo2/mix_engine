@@ -614,6 +614,17 @@ class TrainDataProducer:
                                        self.vocab_split_flag, phase + " phrase")
         return word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab
 
+    def vocab_id_sort(self, vocab_dict):
+        sorted_id_vocab = dict()
+        id = 0
+        for word in vocab_dict:
+            if word in sorted_id_vocab:
+                print("word repeat error:", word)
+                continue
+            sorted_id_vocab[word] = id
+            id += 1
+        return sorted_id_vocab
+
     def combine_vocab(self, en_path, es_path, en_es_path):
         en_word_vocab_in, en_word_vocab_out, en_letter_vocab, en_phrase_vocab = \
             self.read_vocabs(en_path, "en")
@@ -622,10 +633,10 @@ class TrainDataProducer:
         en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
             self.read_vocabs(en_es_path, "en es")
 
-        self.in_word_id_dict = dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in)
-        self.out_word_id_dict = dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out)
-        self.letter_id_dict = dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab)
-        self.phrase_id_dict = dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab)
+        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
+        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
+        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
+        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
 
         return
 
