@@ -422,14 +422,16 @@ class TrainDataProducer:
 
     def save_map_to_file(self, id_map, vocab_file_out):
         with open(vocab_file_out, "w") as f:
-            for word, id in id_map.items():
+            id = 0
+            for word in id_map:
                 f.write(word + self.vocab_split_flag + str(id) + "\n")
+                id += 1
         f.close()
 
         return
 
     def save_vocab_files(self, data_path_out):
-        self.make_vocab_map()
+        # self.make_vocab_map()
         self.save_map_to_file(self.in_word_id_dict, data_path_out + "/vocab_in_words")
         self.save_map_to_file(self.out_word_id_dict, data_path_out + "/vocab_out")
         self.save_map_to_file(self.letter_id_dict, data_path_out + "/vocab_in_letters")
@@ -566,46 +568,23 @@ class TrainDataProducer:
         return
 
     def build_words_keys_pair(self, file):
+        words_keys_pair = dict()
         with open(file, "r") as f:
             for line in f:
                 word, key, freq = line.strip().split("\t")
-                if word not in self.words_keys_pair:
-                    self.words_keys_pair[word] = {}
-                self.words_keys_pair[word][key] = int(freq)
-        # has_wrong_word_count = 0
-        for word in self.words_keys_pair.keys():
-            has_correct_word = False
-            keys_dict = self.words_keys_pair[word]
-            freq_list = list(keys_dict.values())
-            for key in list(keys_dict.keys()):
-                if key == word.lower():
-                    has_correct_word = True
-                    break
-            new_key_set = list(keys_dict.keys())
-            if not has_correct_word and " " not in word and "'" not in word:
-                new_key_set.insert(0, word)
-                first_freq = freq_list[0]
-                freq_list.insert(0, 3 * first_freq)
-                # print(word, list(keys_dict.keys()))
-                # word_original, word_lemmatized, lemmatized_idx = self.lemmatize(word)
-                # print(word_original, word_lemmatized, lemmatized_idx)
-                # has_wrong_word_count += 1
-                # print(new_key_set, word, freq_list)
-            elif has_correct_word and " " not in word and "'" not in word:
-                first_key = new_key_set[0]
-                if first_key != word.lower():
-                    word_index = new_key_set.index(word.lower())
-                    new_key_set[0] = word.lower()
-                    new_key_set[word_index] = first_key
-                    first_freq = freq_list[0]
-                    freq_list[0] = 3 * first_freq
-                    # print(new_key_set, word, freq_list)
+                if word not in words_keys_pair:
+                    words_keys_pair[word] = {}
+                words_keys_pair[word][key] = int(freq)
 
-                    # has_wrong_word_count += 1
+        for word in words_keys_pair.keys():
+            keys_dict = words_keys_pair[word]
+            freq_list = list(keys_dict.values())
+            new_key_set = list(keys_dict.keys())
 
             num_samples = float(sum(freq_list))
             num_scale = [sum(freq_list[:i + 1]) / num_samples for i in range(len(freq_list))]
-            self.words_keys_pair[word] = (new_key_set, num_scale)
+            words_keys_pair[word] = (new_key_set, num_scale)
+        return words_keys_pair
 
     def words_keys_pair_replace(self, words):
         letters = []
@@ -624,7 +603,39 @@ class TrainDataProducer:
                 letters.append(keys[id])
         return letters
 
-    def combine_data(self, en_path, es_path, en_es_path):
+    def read_vocabs(self, path, phase):
+        word_vocab_in = self.load_vocab(os.path.join(path, "vocab_in_words"),
+                                           self.vocab_split_flag, phase + " word in")
+        word_vocab_out = self.load_vocab(os.path.join(path, "vocab_out"),
+                                         self.vocab_split_flag, phase + " word out")
+        letter_vocab = self.load_vocab(os.path.join(path, "vocab_in_letters"),
+                                       self.vocab_split_flag, phase + " letter")
+        phrase_vocab = self.load_vocab(os.path.join(path, "vocab_phrase"),
+                                       self.vocab_split_flag, phase + " phrase")
+        return word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab
+
+    def combine_vocab(self, en_path, es_path, en_es_path):
+        en_word_vocab_in, en_word_vocab_out, en_letter_vocab, en_phrase_vocab = \
+            self.read_vocabs(en_path, "en")
+        es_word_vocab_in, es_word_vocab_out, es_letter_vocab, es_phrase_vocab = \
+            self.read_vocabs(es_path, "es")
+        en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
+            self.read_vocabs(en_es_path, "en es")
+
+        self.in_word_id_dict = dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in)
+        self.out_word_id_dict = dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out)
+        self.letter_id_dict = dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab)
+        self.phrase_id_dict = dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab)
+
+        return
+
+    def combine_words_keys_pair(self, en_map_file, es_map_file):
+
+        en_words_keys_pair = self.build_words_keys_pair(en_map_file)
+        es_words_keys_pair = self.build_words_keys_pair(es_map_file)
+        self.words_keys_pair = dict(en_words_keys_pair, **es_words_keys_pair)
+        print("combine words keys map size :", len(self.words_keys_pair))
+
         return
 
 
@@ -634,10 +645,18 @@ if __name__ == "__main__":
 
     en_path_in = args[1]
     es_path_in = args[2]
-    en_es_path_out = args[3]
+    en_es_path_in = args[3]
+    en_word_keys_pair_map = args[4]
+    es_word_keys_pair_map = args[5]
+    en_es_path_out = args[6]
 
     data_producer = TrainDataProducer()
-    data_producer.combine_data(en_path_in, es_path_in, en_es_path_out)
+    data_producer.combine_words_keys_pair(en_word_keys_pair_map, es_word_keys_pair_map)
+    data_producer.combine_vocab(en_path_in, es_path_in, en_es_path_in)
+    data_producer.save_vocab_files(en_es_path_out)
+
+    data_producer.convert_to_ids(en_es_path_out)
+
 
 
 
