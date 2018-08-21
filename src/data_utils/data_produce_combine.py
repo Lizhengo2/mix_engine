@@ -633,10 +633,15 @@ class TrainDataProducer:
         en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
             self.read_vocabs(en_es_path, "en es")
 
-        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
-        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
-        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
-        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
+#        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
+#        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
+#        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
+#        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
+        
+        self.in_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_in, **es_word_vocab_in))
+        self.out_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_out, **es_word_vocab_out))
+        self.letter_id_dict = self.vocab_id_sort(dict(en_letter_vocab, **es_letter_vocab))
+        self.phrase_id_dict = self.vocab_id_sort(dict(en_phrase_vocab, **es_phrase_vocab))
 
         return
 
