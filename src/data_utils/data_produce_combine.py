@@ -70,10 +70,14 @@ class TrainDataProducer:
 
         self.line_num = 0
 
-    def load_vocab(self, vocab_file, split_flag, vocab_type):
+    def load_vocab(self, vocab_file, split_flag, max_num, vocab_type):
         vocab_dict = dict()
+        count = 0
         with open(vocab_file, "r") as f:
             for line in f:
+                count += 1
+                if count > max_num > 0:
+                    break
                 line = line.strip()
                 line_split = re.split(split_flag, line)
                 if len(line_split) == 2:
@@ -605,13 +609,13 @@ class TrainDataProducer:
 
     def read_vocabs(self, path, phase):
         word_vocab_in = self.load_vocab(os.path.join(path, "vocab_in_words"),
-                                           self.vocab_split_flag, phase + " word in")
+                                           self.vocab_split_flag, 10000, phase + " word in")
         word_vocab_out = self.load_vocab(os.path.join(path, "vocab_out"),
-                                         self.vocab_split_flag, phase + " word out")
+                                         self.vocab_split_flag, 10000, phase + " word out")
         letter_vocab = self.load_vocab(os.path.join(path, "vocab_in_letters"),
-                                       self.vocab_split_flag, phase + " letter")
+                                       self.vocab_split_flag, -1, phase + " letter")
         phrase_vocab = self.load_vocab(os.path.join(path, "vocab_phrase"),
-                                       self.vocab_split_flag, phase + " phrase")
+                                       self.vocab_split_flag, 10000, phase + " phrase")
         return word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab
 
     def vocab_id_sort(self, vocab_dict):
@@ -633,15 +637,15 @@ class TrainDataProducer:
         en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
             self.read_vocabs(en_es_path, "en es")
 
-#        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
-#        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
-#        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
-#        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
+        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
+        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
+        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
+        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
         
-        self.in_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_in, **es_word_vocab_in))
-        self.out_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_out, **es_word_vocab_out))
-        self.letter_id_dict = self.vocab_id_sort(dict(en_letter_vocab, **es_letter_vocab))
-        self.phrase_id_dict = self.vocab_id_sort(dict(en_phrase_vocab, **es_phrase_vocab))
+#        self.in_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_in, **es_word_vocab_in))
+#        self.out_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_out, **es_word_vocab_out))
+#        self.letter_id_dict = self.vocab_id_sort(dict(en_letter_vocab, **es_letter_vocab))
+#        self.phrase_id_dict = self.vocab_id_sort(dict(en_phrase_vocab, **es_phrase_vocab))
 
         return
 
