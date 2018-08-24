@@ -287,9 +287,14 @@ class LetterModel(object):
                                                            shape=[self.batch_size],
                                                            name="batched_input_sequence_length")
         self.top_k = tf.placeholder(dtype=index_data_type(), shape=[], name="top_k")
+        # self.target_data_logits_masks = tf.placeholder_with_default(
+        #     tf.ones([self.batch_size * self.max_word_length, self.vocab_size_out], dtype=data_type()),
+        #     [self.batch_size * self.max_word_length, self.vocab_size_out], name="batched_output_data_logits_masks")
         self.target_data_logits_masks = tf.placeholder_with_default(
-            tf.ones([self.batch_size * self.max_word_length, self.vocab_size_out], dtype=data_type()),
-            [self.batch_size * self.max_word_length, self.vocab_size_out], name="batched_output_data_logits_masks")
+            tf.ones([self.batch_size, self.vocab_size_out], dtype=data_type()),
+            [self.batch_size, self.vocab_size_out], name="batched_output_data_logits_masks")
+        target_data_logits_masks_repeat = tf.reshape(tf.tile(self.target_data_logits_masks, [1, self.max_word_length]),
+                                                   [self.batch_size * self.max_word_length, -1])
 
         def lstm_cell():
             return tf.contrib.rnn.BasicLSTMCell(
@@ -368,12 +373,19 @@ class LetterModel(object):
             softmax_b = tf.get_variable("softmax_b", [self.vocab_size_out], dtype=data_type())
 
         logits = (tf.matmul(tf.matmul(output, rnn_output_to_final_output),
-                           self._softmax_w) + softmax_b) * self.target_data_logits_masks
+                           self._softmax_w) + softmax_b) * target_data_logits_masks_repeat
         self._logits = tf.identity(logits, name="logits")
 
         probabilities = tf.nn.softmax(logits, name="probabilities")
         # probabilities.shape = [batch_size * num_steps * max_word_length, vocab_size_out]
         _, top_k_prediction = tf.nn.top_k(logits, self.top_k, name="top_k_prediction")
+
+        print(config.data_utility.en_vocab_size_out)
+        en_probabilities = tf.nn.softmax(logits[:, :config.data_utility.en_vocab_size_out], name="en_probabilities")
+        _, en_top_k_prediction = tf.nn.top_k(en_probabilities, self.top_k, name="en_top_k_prediction")
+
+        es_probabilities = tf.nn.softmax(logits[:, config.data_utility.en_vocab_size_out:], name="es_probabilities")
+        _, es_top_k_prediction = tf.nn.top_k(es_probabilities, self.top_k, name="es_top_k_prediction")
 
         loss = tf.contrib.legacy_seq2seq.sequence_loss_by_example([logits],
                                                                   [tf.reshape(self.target_data, [-1])],

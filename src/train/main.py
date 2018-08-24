@@ -36,7 +36,11 @@ def export_graph(session, iter, phase="lm"):
                                "Online/LetterModel/probabilities",
                                "Online/LetterModel/state_out",
                                "Online/LetterModel/top_k_prediction",
-                               "Online/LetterModel/logits"]
+                               "Online/LetterModel/logits",
+                               "Online/LetterModel/en_probabilities",
+                               "Online/LetterModel/es_probabilities",
+                               "Online/LetterModel/en_top_k_prediction",
+                               "Online/LetterModel/es_top_k_prediction"]
 
     else:
         # Export language model's output and letter model's predictions, because we don't need language model's softmax.
@@ -45,7 +49,11 @@ def export_graph(session, iter, phase="lm"):
                                "Online/LetterModel/probabilities",
                                "Online/LetterModel/state_out",
                                "Online/LetterModel/top_k_prediction",
-                               "Online/LetterModel/logits"]
+                               "Online/LetterModel/logits",
+                               "Online/LetterModel/en_probabilities",
+                               "Online/LetterModel/es_probabilities",
+                               "Online/LetterModel/en_top_k_prediction",
+                               "Online/LetterModel/es_top_k_prediction"]
     if FLAGS.use_phrase:
         variables_to_export.extend(["Online/WordModel/phrase_p_probabilities",
                                     "Online/WordModel/phrase_p_prediction",
@@ -345,6 +353,7 @@ def main(_):
     test_config.get_config(FLAGS.vocab_path, FLAGS.model_config)
     test_config.batch_size = 1
     test_config.num_steps = 1
+    test_config.max_word_length = 1
 
     with tf.Graph().as_default():
         initializer = tf.random_uniform_initializer(-config.init_scale, config.init_scale)

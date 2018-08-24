@@ -50,6 +50,12 @@ class InputEngineRnn:
         self.kc_top_k_prediction_name = prefix + "Online/LetterModel/top_k_prediction:1"
         self.kc_output_name = prefix + "Online/LetterModel/probabilities:0"
         self.kc_state_out_name = prefix + "Online/LetterModel/state_out:0"
+        self.kc_logits = prefix + "Online/LetterModel/logits: 0"
+
+        self.en_top_k_prediction_name = prefix + "Online/LetterModel/en_top_k_prediction:1"
+        self.en_probs = prefix + "Online/LetterModel/en_probabilities:0"
+        self.es_top_k_prediction_name = prefix + "Online/LetterModel/es_top_k_prediction:1"
+        self.es_probs = prefix + "Online/LetterModel/es_probabilities:0"
 
         with open(graph_file, 'rb') as f:
             graph_def = tf.GraphDef()
@@ -154,10 +160,11 @@ class InputEngineRnn:
                 else:
                     feed_values[self.kc_state_in_name] = kc_state_out
                     # Use letter model's final state to letter model's initial state when feed the letters one-by-one.
-                probabilities, top_k_predictions, kc_state_out = self._sess.run([self.kc_output_name, self.kc_top_k_prediction_name,
+                probabilities, top_k_predictions, kc_state_out = self._sess.run([self.es_probs, self.es_top_k_prediction_name,
                                                                                  self.kc_state_out_name], feed_dict=feed_values)
+
                 probability_topk = [probabilities[0][id] for id in top_k_predictions[0]]
-                words = self._data_utility.ids2outwords(top_k_predictions[0])
+                words = self._data_utility.ids2outwords(top_k_predictions[0] + self._data_utility.en_vocab_size_out)
                 # Predict phrase
                 if self.use_phrase:
                     if j == 0 and i > 0:
@@ -209,13 +216,13 @@ class InputEngineRnn:
 
                 for i in range(len(out_words_list)):
                     print("\t".join(words_line[:i])
-                         + "|#|" + letters_line[i]
+                         + "|#|" + " ".join(letters_line[i])
                          + "|#|" + "\t".join(words_line[i:]) + "|#|"
                           + '\t'.join([self.result_print(out_words, out_prob)
                                        for (out_words, out_prob) in zip(out_words_list[i], out_prob_list[i])])
                           + "\n")
                     testfileout.write("\t".join(words_line[:i])
-                                      + "|#|" + letters_line[i]
+                                      + "|#|" + " ".join(letters_line[i])
                                       + "|#|" + "\t".join(words_line[i:]) + "|#|"
                                       + '\t'.join([self.result_print(out_words, out_prob)
                                             for (out_words, out_prob) in zip(out_words_list[i], out_prob_list[i])])
