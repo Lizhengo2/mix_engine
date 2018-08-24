@@ -103,6 +103,8 @@ def data_iterator(data, config):
     num_steps = config.num_steps
     max_word_length = config.max_word_length
     batch_size = config.batch_size
+    en_logits_mask = [1.0] * en_vocab_size_out + [0.0] * (vocab_size_out - en_vocab_size_out)
+    es_logits_mask = [0.0] * en_vocab_size_out + [1.0] * (vocab_size_out - en_vocab_size_out)
 
     def flatten(lst):
         # Assume lst is a list of lists, whose every item is an ID list
@@ -122,8 +124,7 @@ def data_iterator(data, config):
         # The mask is 15 when the input letter equals to the output word, else the mask is 5.
 
     def logits_mask(id):
-        return np.array([0.0] * en_vocab_size_out + [1.0] * (vocab_size_out - en_vocab_size_out)) if id >= en_vocab_size_out else \
-                np.array([1.0] * en_vocab_size_out + [0.0] * (vocab_size_out - en_vocab_size_out))
+        return es_logits_mask if id >= en_vocab_size_out else en_logits_mask
 
     while True:
 
@@ -199,6 +200,7 @@ def data_iterator(data, config):
             phrase_mask[phrase_epoch_y < phrase_unused_num] = 0.0
             # Do not calculate loss for phrase pad position
             # print(letter_logits_mask)
+            # print(letter_logits_mask.shape)
 
             data_feed_to_lm_model = (lm_epoch_x, lm_epoch_y, lm_mask, sequence_lengths, word_logits_mask)
 
