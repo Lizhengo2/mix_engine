@@ -198,7 +198,7 @@ class InputEngineRnn:
         string = ""
         for (word, prob) in zip(out_string, out_prob):
             prob = str(prob) if word != "" else "0.0"
-            string = string + word + ":" + prob + "|"
+            string = string + word[4:] + ":" + prob + "|"
         string = string[:-1]
         return string
 

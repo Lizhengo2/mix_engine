@@ -178,8 +178,8 @@ def data_iterator(data, config):
 
             unused_en_letter_mask = (lm_epoch_y == lm_en_unuesd_num).reshape([-1])
             unused_es_letter_mask = (lm_epoch_y == lm_es_unuesd_num).reshape([-1])
-            letter_mask_epoch[unused_en_letter_mask is True] = 0.0
-            letter_mask_epoch[unused_es_letter_mask is True] = 0.0
+            letter_mask_epoch[unused_en_letter_mask == True] = 0.0
+            letter_mask_epoch[unused_es_letter_mask == True] = 0.0
             # Do not calculate loss for <eos> position in the letter epoch.
 
             phrase_p_epoch_y = phrase_p_epoch[:, i * num_steps + 1:(i + 1) * num_steps + 1]
@@ -191,7 +191,7 @@ def data_iterator(data, config):
             lm_mask[lm_epoch_y == lm_en_unuesd_num] = 0.0
             lm_mask[lm_epoch_y == lm_es_unuesd_num] = 0.0
             # Do not calculate loss for <eos> position
-
+            print(lm_mask)
             phrase_p_mask = np.ones([batch_size, num_steps])
             phrase_p_mask[phrase_epoch_y == 0] = 0.0
             # Do not calculate loss for phrase prob pad position
@@ -200,7 +200,7 @@ def data_iterator(data, config):
             phrase_mask[phrase_epoch_y < phrase_unused_num] = 0.0
             # Do not calculate loss for phrase pad position
             # print(word_logits_mask)
-            # print(letter_mask_epoch)
+            print(letter_mask_epoch)
 
             data_feed_to_lm_model = (lm_epoch_x, lm_epoch_y, lm_mask, sequence_lengths, word_logits_mask)
 
