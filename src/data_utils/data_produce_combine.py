@@ -609,13 +609,13 @@ class TrainDataProducer:
 
     def read_vocabs(self, path, phase):
         word_vocab_in = self.load_vocab(os.path.join(path, "vocab_in_words"),
-                                           self.vocab_split_flag, 10000, phase + " word in")
+                                           self.vocab_split_flag, -1, phase + " word in")
         word_vocab_out = self.load_vocab(os.path.join(path, "vocab_out"),
-                                         self.vocab_split_flag, 10000, phase + " word out")
+                                         self.vocab_split_flag, -1, phase + " word out")
         letter_vocab = self.load_vocab(os.path.join(path, "vocab_in_letters"),
                                        self.vocab_split_flag, -1, phase + " letter")
         phrase_vocab = self.load_vocab(os.path.join(path, "vocab_phrase"),
-                                       self.vocab_split_flag, 10000, phase + " phrase")
+                                       self.vocab_split_flag, -1, phase + " phrase")
         return word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab
 
     def vocab_id_sort(self, vocab_dict):
@@ -629,18 +629,23 @@ class TrainDataProducer:
             id += 1
         return sorted_id_vocab
 
-    def combine_vocab(self, en_path, es_path, en_es_path):
-        en_word_vocab_in, en_word_vocab_out, en_letter_vocab, en_phrase_vocab = \
-            self.read_vocabs(en_path, "en")
-        es_word_vocab_in, es_word_vocab_out, es_letter_vocab, es_phrase_vocab = \
-            self.read_vocabs(es_path, "es")
-        en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
-            self.read_vocabs(en_es_path, "en es")
-
-        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
-        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
-        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
-        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
+    def combine_vocab(self, vocab_path, en_path, es_path, en_es_path):
+       # en_word_vocab_in, en_word_vocab_out, en_letter_vocab, en_phrase_vocab = \
+       #     self.read_vocabs(en_path, "en")
+       # es_word_vocab_in, es_word_vocab_out, es_letter_vocab, es_phrase_vocab = \
+       #     self.read_vocabs(es_path, "es")
+       # en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
+       #     self.read_vocabs(en_es_path, "en es")
+        word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab = \
+            self.read_vocabs(vocab_path, "combine")
+        self.in_word_id_dict = self.vocab_id_sort(word_vocab_in)
+        self.out_word_id_dict = self.vocab_id_sort(word_vocab_out)
+        self.letter_id_dict = self.vocab_id_sort(letter_vocab)
+        self.phrase_id_dict = self.vocab_id_sort(phrase_vocab) 
+    #    self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
+    #    self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
+    #    self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
+    #    self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
         
 #        self.in_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_in, **es_word_vocab_in))
 #        self.out_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_out, **es_word_vocab_out))
@@ -669,10 +674,11 @@ if __name__ == "__main__":
     en_word_keys_pair_map = args[4]
     es_word_keys_pair_map = args[5]
     en_es_path_out = args[6]
+    vocab_path = args[7]
 
     data_producer = TrainDataProducer()
     data_producer.combine_words_keys_pair(en_word_keys_pair_map, es_word_keys_pair_map)
-    data_producer.combine_vocab(en_path_in, es_path_in, en_es_path_in)
+    data_producer.combine_vocab(vocab_path, en_path_in, es_path_in, en_es_path_in)
     data_producer.save_vocab_files(en_es_path_out)
 
     data_producer.convert_to_ids(en_es_path_out)
