@@ -13,8 +13,8 @@ class TrainDataProducer:
 
     def __init__(self):
 
-      #  self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
-        self.word_regex = "^[a-zA-Z']+$"
+        self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
+      #  self.word_regex = "^[a-zA-Z']+$"
         self.num_regex = "^[+-]*[0-9]+.*[0-9]*$"
         self.pun_regex = "^[^a-zA-Z0-9']*$"
 
@@ -578,15 +578,15 @@ class TrainDataProducer:
             keys_dict = self.words_keys_pair[word]
             freq_list = list(keys_dict.values())
             new_key_set = list(keys_dict.keys())
-            # has_correct_word = False
-            # for key in list(keys_dict.keys()):
-            #     if key == word.lower():
-            #         has_correct_word = True
-            #         break
-            # if not has_correct_word and " " not in word and "'" not in word:
-            #     new_key_set.insert(0, word)
-            #     first_freq = freq_list[0]
-            #     freq_list.insert(0, 3 * first_freq)
+            has_correct_word = False
+            for key in list(keys_dict.keys()):
+                if key == word.lower():
+                    has_correct_word = True
+                    break
+            if not has_correct_word and " " not in word and "'" not in word:
+                new_key_set.insert(0, word.lower())
+                sum_freq = float(sum(freq_list))
+                freq_list.insert(0, int(sum_freq * 7 / 3))
             #
             # elif has_correct_word and " " not in word and "'" not in word:
             #     first_key = new_key_set[0]

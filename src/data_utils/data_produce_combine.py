@@ -66,7 +66,8 @@ class TrainDataProducer:
         self.out_word_id_dict = dict()
         self.phrase_id_dict = dict()
 
-        self.words_keys_pair = dict()
+        self.en_words_keys_pair = dict()
+        self.es_words_keys_pair = dict()
 
         self.line_num = 0
 
@@ -584,7 +585,15 @@ class TrainDataProducer:
             keys_dict = words_keys_pair[word]
             freq_list = list(keys_dict.values())
             new_key_set = list(keys_dict.keys())
-
+            has_correct_word = False
+            for key in list(keys_dict.keys()):
+                if key == word.lower():
+                    has_correct_word = True
+                    break
+            if not has_correct_word and " " not in word and "'" not in word:
+                new_key_set.insert(0, word.lower())
+                sum_freq = float(sum(freq_list))
+                freq_list.insert(0, int(sum_freq*7/3))
             num_samples = float(sum(freq_list))
             num_scale = [sum(freq_list[:i + 1]) / num_samples for i in range(len(freq_list))]
             words_keys_pair[word] = (new_key_set, num_scale)
@@ -593,18 +602,27 @@ class TrainDataProducer:
     def words_keys_pair_replace(self, words):
         letters = []
         for word in words:
+            words_keys_pair = None
 
-            if word not in self.words_keys_pair and word.lower() not in self.words_keys_pair:
-                letters.append(word.lower())
-            else:
-                if word in self.words_keys_pair:
+            if word in self.en_words_keys_pair or word.lower() in self.en_words_keys_pair:
+                words_keys_pair = self.en_words_keys_pair
+            elif word in self.es_words_keys_pair or word.lower() in self.es_words_keys_pair:
+                words_keys_pair = self.es_words_keys_pair
+
+            if words_keys_pair is not None:
+                if word in words_keys_pair:
                     replaced_word = word
                 else:
                     replaced_word = word.lower()
+
                 random_number_01 = np.random.random_sample()
-                keys, scale = self.words_keys_pair[replaced_word]
+                keys, scale = words_keys_pair[replaced_word]
                 id = min([i for i in range(len(scale)) if scale[i] > random_number_01])
                 letters.append(keys[id])
+
+            else:
+                letters.append(word.lower())
+
         return letters
 
     def read_vocabs(self, path, phase):
@@ -656,10 +674,10 @@ class TrainDataProducer:
 
     def combine_words_keys_pair(self, en_map_file, es_map_file):
 
-        en_words_keys_pair = self.build_words_keys_pair(en_map_file)
-        es_words_keys_pair = self.build_words_keys_pair(es_map_file)
-        self.words_keys_pair = dict(en_words_keys_pair, **es_words_keys_pair)
-        print("combine words keys map size :", len(self.words_keys_pair))
+        self.en_words_keys_pair = self.build_words_keys_pair(en_map_file)
+        self.es_words_keys_pair = self.build_words_keys_pair(es_map_file)
+        print("en words keys map size :", len(self.en_words_keys_pair))
+        print("es words keys map size :", len(self.es_words_keys_pair))
 
         return
 
