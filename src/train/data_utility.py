@@ -82,6 +82,11 @@ class DataUtility:
             if word_id in self.head_mask:
                 continue
             self.head_mask[word_id][0] = 0
+        self.word_logits_mask = defaultdict(lambda: np.zeros(shape=(self.out_words_count,), dtype=np.float32))
+        for id in range(self.en_vocab_size_out):
+            self.word_logits_mask["en"][id] = 1.0
+        for id in range(self.en_vocab_size_out, self.out_words_count):
+            self.word_logits_mask["es"][id] = 1.0
 
     def get_head_pick_id(self, head):
         if head is None:
@@ -111,14 +116,16 @@ class DataUtility:
     def word2id(self, word):
         if re.match("^[a-zA-Z]$", word) or (word in self.token2id_in_words):
             word_out = word
+        elif word.lower() in self.token2id_in_words:
+            word_out = word.lower()
+        elif re.match("^[+-]*[0-9]+.*[0-9]*$", word):
+            word_out = self.num_str
+        elif re.match("^[+-]*[0-9]+.*[0-9]*$", word):
+            word_out = self.num_str
+        elif re.match("^[^a-zA-Z0-9']*$", word):
+            word_out = self.pun_str
         else:
-            if re.match("^[+-]*[0-9]+.*[0-9]*$", word):
-                word_out = self.num_str
-            else:
-                if re.match("^[^a-zA-Z0-9']*$", word):
-                    word_out = self.pun_str
-                else:
-                    word_out = self.unk_str
+            word_out = self.unk_str
         rid = self.token2id_in_words.get(word_out, -1)
         if rid == -1:
             if self.fullvocab_set and word_out in self.fullvocab_set:
@@ -131,9 +138,9 @@ class DataUtility:
         return [self.eos_id] + [self.word2id(word) for word in words if len(word) > 0]
 
     def letters2ids(self, letters):
-        letters_split = re.split("\\s+", letters)
+        # letters_split = re.split("\\s+", letters)
         return [self.start_id] + [self.token2id_in_letters.get(letter, self.token2id_in_letters[self.unk_str])
-                                  for letter in letters_split if len(letter) > 0]
+                                  for letter in letters if len(letter) > 0]
 
     def outword2id(self, outword):
         return self.token2id_out.get(outword, self.token2id_out[self.unk_str])
