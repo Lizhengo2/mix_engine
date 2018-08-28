@@ -67,8 +67,7 @@ class TrainDataProducer:
         self.out_word_id_dict = dict()
         self.phrase_id_dict = dict()
 
-        self.en_words_keys_pair = dict()
-        self.es_words_keys_pair = dict()
+        self.words_keys_pair = dict()
 
         self.line_num = 0
 
@@ -567,17 +566,16 @@ class TrainDataProducer:
         return
 
     def build_words_keys_pair(self, file):
-        words_keys_pair = dict()
         with open(file, "r") as f:
             for line in f:
                 word, key, freq = line.strip().split("\t")
-                if word not in words_keys_pair:
-                    words_keys_pair[word] = {}
-                words_keys_pair[word][key] = int(freq)
+                if word not in self.words_keys_pair:
+                    self.words_keys_pair[word] = {}
+                self.words_keys_pair[word][key] = int(freq)
         # has_wrong_word_count = 0
-        for word in words_keys_pair.keys():
+        for word in self.words_keys_pair.keys():
 
-            keys_dict = words_keys_pair[word]
+            keys_dict = self.words_keys_pair[word]
             freq_list = list(keys_dict.values())
             new_key_set = list(keys_dict.keys())
             has_correct_word = False
@@ -601,43 +599,24 @@ class TrainDataProducer:
 
             num_samples = float(sum(freq_list))
             num_scale = [sum(freq_list[:i + 1]) / num_samples for i in range(len(freq_list))]
-            words_keys_pair[word] = (new_key_set, num_scale)
-        return words_keys_pair
+            self.words_keys_pair[word] = (new_key_set, num_scale)
 
     def words_keys_pair_replace(self, words):
         letters = []
         for word in words:
 
-            words_keys_pair = None
-
-            if word in self.en_words_keys_pair or word.lower() in self.en_words_keys_pair:
-                words_keys_pair = self.en_words_keys_pair
-            elif word in self.es_words_keys_pair or word.lower() in self.es_words_keys_pair:
-                words_keys_pair = self.es_words_keys_pair
-
-            if words_keys_pair is not None:
-                if word in words_keys_pair:
+            if word not in self.words_keys_pair and word.lower() not in self.words_keys_pair:
+                letters.append(word.lower())
+            else:
+                if word in self.words_keys_pair:
                     replaced_word = word
                 else:
                     replaced_word = word.lower()
-
                 random_number_01 = np.random.random_sample()
-                keys, scale = words_keys_pair[replaced_word]
+                keys, scale = self.words_keys_pair[replaced_word]
                 id = min([i for i in range(len(scale)) if scale[i] > random_number_01])
                 letters.append(keys[id])
-
-            else:
-                letters.append(word.lower())
         return letters
-
-    def combine_words_keys_pair(self, en_map_file, es_map_file):
-
-        self.en_words_keys_pair = self.build_words_keys_pair(en_map_file)
-        self.es_words_keys_pair = self.build_words_keys_pair(es_map_file)
-        print("en words keys map size :", len(self.en_words_keys_pair))
-        print("es words keys map size :", len(self.es_words_keys_pair))
-
-        return
 
 
 if __name__ == "__main__":
@@ -645,22 +624,21 @@ if __name__ == "__main__":
     args = sys.argv
 
     words_dict_file = args[1]
-    en_word_keys_pair_map = args[2]
-    es_word_keys_pair_map = args[3]
-    emojis_file = args[4]
+    word_keys_pair_map = args[2]
+    emojis_file = args[3]
     # phrase_file = args[4]
-    data_path_in = args[5]
-    data_path_out = args[6]
+    data_path_in = args[4]
+    data_path_out = args[5]
 
-    rate_threshold = float(args[7])
-    words_num = int(args[8])
-    phrase_num = int(args[9])
-    train_data_num = int(args[10])
-    dev_data_num = int(args[11])
-    test_data_num = int(args[12])
+    rate_threshold = float(args[6])
+    words_num = int(args[7])
+    phrase_num = int(args[8])
+    train_data_num = int(args[9])
+    dev_data_num = int(args[10])
+    test_data_num = int(args[11])
 
     data_producer = TrainDataProducer()
-    data_producer.combine_words_keys_pair(en_word_keys_pair_map, es_word_keys_pair_map)
+    data_producer.build_words_keys_pair(word_keys_pair_map)
 
     data_producer.emojis_dict = data_producer.load_vocab(emojis_file, "\t+", "emojis")
     # data_producer.phrase_dict = data_producer.load_vocab(phrase_file, "##", "phrase")

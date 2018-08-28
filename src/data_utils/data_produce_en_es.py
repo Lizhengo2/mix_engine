@@ -14,6 +14,7 @@ class TrainDataProducer:
     def __init__(self):
 
         self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
+      #  self.word_regex = "^[a-zA-Z']+$"
         self.num_regex = "^[+-]*[0-9]+.*[0-9]*$"
         self.pun_regex = "^[^a-zA-Z0-9']*$"
 
@@ -71,14 +72,10 @@ class TrainDataProducer:
 
         self.line_num = 0
 
-    def load_vocab(self, vocab_file, split_flag, max_num, vocab_type):
+    def load_vocab(self, vocab_file, split_flag, vocab_type):
         vocab_dict = dict()
-        count = 0
         with open(vocab_file, "r") as f:
             for line in f:
-                count += 1
-                if count > max_num > 0:
-                    break
                 line = line.strip()
                 line_split = re.split(split_flag, line)
                 if len(line_split) == 2:
@@ -105,8 +102,8 @@ class TrainDataProducer:
         else:
             return False
 
-    def calc_words_phrase_freq_line(self, line):
-        words = re.split(self.line_split_flag, line)
+    def calc_words_phrase_freq_line(self, words):
+        # words = re.split(self.line_split_flag, line)
         if len(words) > 0:
 
             for word in words:
@@ -132,7 +129,7 @@ class TrainDataProducer:
                         else:
                             self.phrase_count_dict_from_data[phrase_3] = 1
         else:
-            print("split error :", line)
+            print("split error :", words)
 
         return
 
@@ -427,16 +424,14 @@ class TrainDataProducer:
 
     def save_map_to_file(self, id_map, vocab_file_out):
         with open(vocab_file_out, "w") as f:
-            id = 0
-            for word in id_map:
+            for word, id in id_map.items():
                 f.write(word + self.vocab_split_flag + str(id) + "\n")
-                id += 1
         f.close()
 
         return
 
     def save_vocab_files(self, data_path_out):
-        # self.make_vocab_map()
+        self.make_vocab_map()
         self.save_map_to_file(self.in_word_id_dict, data_path_out + "/vocab_in_words")
         self.save_map_to_file(self.out_word_id_dict, data_path_out + "/vocab_out")
         self.save_map_to_file(self.letter_id_dict, data_path_out + "/vocab_in_letters")
@@ -462,8 +457,7 @@ class TrainDataProducer:
                 else:
                     ids_list.append(self.in_word_id_dict[self.unk_flag])
 
-            str_ids = " ".join([str(id) for id in ids_list])
-            return str_ids
+            return ids_list
         else:
             return None
 
@@ -481,8 +475,7 @@ class TrainDataProducer:
                 else:
                     ids_list.append(self.out_word_id_dict[self.unk_flag])
 
-            str_ids = " ".join([str(id) for id in ids_list])
-            return str_ids
+            return ids_list
         else:
             return None
 
@@ -500,9 +493,8 @@ class TrainDataProducer:
                             letter_ids_list.append(self.letter_id_dict[self.unk_flag])
                 str_letter_ids = " ".join([str(id) for id in letter_ids_list])
                 str_letters_ids_list.append(str_letter_ids)
-            str_letters_ids = "#".join(str_letters_ids_list)
 
-            return str_letters_ids
+            return str_letters_ids_list
         else:
             return None
 
@@ -526,8 +518,7 @@ class TrainDataProducer:
                 else:
                     ids_list.append(self.phrase_id_dict[self.pad_flag])
 
-            str_ids = " ".join([str(id) for id in ids_list])
-            return str_ids
+            return ids_list
         else:
             return None
 
@@ -547,6 +538,7 @@ class TrainDataProducer:
 
             if len(letters) != len(words):
                 print(phase + " data line split error :", line)
+                continue
 
             if len(words) >= 2:
                 in_words_id = self.convert_in_words_ids(words)
@@ -555,9 +547,11 @@ class TrainDataProducer:
                 phrase_id = self.convert_phrase_ids(words)
 
                 if in_words_id and out_words_id and in_letters_id and phrase_id:
-                    words_id_file_writer.write(in_words_id + "#" + out_words_id + "\n")
-                    letters_id_file_writer.write(in_letters_id + "\n")
-                    phrase_id_file_writer.write(phrase_id + "\n")
+                    if len(in_words_id) == len(out_words_id) == len(in_letters_id) == len(phrase_id):
+                        words_id_file_writer.write(" ".join([str(id) for id in in_words_id]) + "#" +
+                                                   " ".join([str(id) for id in out_words_id]) + "\n")
+                        letters_id_file_writer.write("#".join(in_letters_id) + "\n")
+                        phrase_id_file_writer.write(" ".join([str(id) for id in phrase_id]) + "\n")
 
         raw_file_reader.close()
         words_id_file_writer.close()
@@ -580,8 +574,9 @@ class TrainDataProducer:
                 if word not in words_keys_pair:
                     words_keys_pair[word] = {}
                 words_keys_pair[word][key] = int(freq)
-
+        # has_wrong_word_count = 0
         for word in words_keys_pair.keys():
+
             keys_dict = words_keys_pair[word]
             freq_list = list(keys_dict.values())
             new_key_set = list(keys_dict.keys())
@@ -593,7 +588,17 @@ class TrainDataProducer:
             if not has_correct_word and " " not in word and "'" not in word:
                 new_key_set.insert(0, word.lower())
                 sum_freq = float(sum(freq_list))
-                freq_list.insert(0, int(sum_freq*7/3))
+                freq_list.insert(0, int(sum_freq * 7 / 3))
+            #
+            # elif has_correct_word and " " not in word and "'" not in word:
+            #     first_key = new_key_set[0]
+            #     if first_key != word.lower():
+            #         word_index = new_key_set.index(word.lower())
+            #         new_key_set[0] = word.lower()
+            #         new_key_set[word_index] = first_key
+            #         first_freq = freq_list[0]
+            #         freq_list[0] = 3 * first_freq
+
             num_samples = float(sum(freq_list))
             num_scale = [sum(freq_list[:i + 1]) / num_samples for i in range(len(freq_list))]
             words_keys_pair[word] = (new_key_set, num_scale)
@@ -602,6 +607,7 @@ class TrainDataProducer:
     def words_keys_pair_replace(self, words):
         letters = []
         for word in words:
+
             words_keys_pair = None
 
             if word in self.en_words_keys_pair or word.lower() in self.en_words_keys_pair:
@@ -622,54 +628,7 @@ class TrainDataProducer:
 
             else:
                 letters.append(word.lower())
-
         return letters
-
-    def read_vocabs(self, path, phase):
-        word_vocab_in = self.load_vocab(os.path.join(path, "vocab_in_words"),
-                                           self.vocab_split_flag, 10000, phase + " word in")
-        word_vocab_out = self.load_vocab(os.path.join(path, "vocab_out"),
-                                         self.vocab_split_flag, 10000, phase + " word out")
-        letter_vocab = self.load_vocab(os.path.join(path, "vocab_in_letters"),
-                                       self.vocab_split_flag, -1, phase + " letter")
-        phrase_vocab = self.load_vocab(os.path.join(path, "vocab_phrase"),
-                                       self.vocab_split_flag, 10000, phase + " phrase")
-        return word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab
-
-    def vocab_id_sort(self, vocab_dict):
-        sorted_id_vocab = dict()
-        id = 0
-        for word in vocab_dict:
-            if word in sorted_id_vocab:
-                print("word repeat error:", word)
-                continue
-            sorted_id_vocab[word] = id
-            id += 1
-        return sorted_id_vocab
-
-    def combine_vocab(self, vocab_path, en_path, es_path, en_es_path):
-        en_word_vocab_in, en_word_vocab_out, en_letter_vocab, en_phrase_vocab = \
-            self.read_vocabs(en_path, "en")
-        es_word_vocab_in, es_word_vocab_out, es_letter_vocab, es_phrase_vocab = \
-            self.read_vocabs(es_path, "es")
-        en_es_word_vocab_in, en_es_word_vocab_out, en_es_letter_vocab, en_es_phrase_vocab = \
-            self.read_vocabs(en_es_path, "en es")
-       # word_vocab_in, word_vocab_out, letter_vocab, phrase_vocab = \
-       #     self.read_vocabs(vocab_path, "combine")
-       # self.in_word_id_dict = self.vocab_id_sort(word_vocab_in)
-       # self.out_word_id_dict = self.vocab_id_sort(word_vocab_out)
-       # self.letter_id_dict = self.vocab_id_sort(letter_vocab)
-       # self.phrase_id_dict = self.vocab_id_sort(phrase_vocab) 
-        self.in_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_in, **es_word_vocab_in), **en_es_word_vocab_in))
-        self.out_word_id_dict = self.vocab_id_sort(dict(dict(en_word_vocab_out, **es_word_vocab_out), **en_es_word_vocab_out))
-        self.letter_id_dict = self.vocab_id_sort(dict(dict(en_letter_vocab, **es_letter_vocab), **en_es_letter_vocab))
-        self.phrase_id_dict = self.vocab_id_sort(dict(dict(en_phrase_vocab, **es_phrase_vocab), **en_es_phrase_vocab))
-        
-#        self.in_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_in, **es_word_vocab_in))
-#        self.out_word_id_dict = self.vocab_id_sort(dict(en_word_vocab_out, **es_word_vocab_out))
-#        self.letter_id_dict = self.vocab_id_sort(dict(en_letter_vocab, **es_letter_vocab))
-#        self.phrase_id_dict = self.vocab_id_sort(dict(en_phrase_vocab, **es_phrase_vocab))
-        return
 
     def combine_words_keys_pair(self, en_map_file, es_map_file):
 
@@ -685,22 +644,34 @@ if __name__ == "__main__":
 
     args = sys.argv
 
-    en_path_in = args[1]
-    es_path_in = args[2]
-    en_es_path_in = args[3]
-    en_word_keys_pair_map = args[4]
-    es_word_keys_pair_map = args[5]
-    en_es_path_out = args[6]
-    vocab_path = args[7]
+    words_dict_file = args[1]
+    en_word_keys_pair_map = args[2]
+    es_word_keys_pair_map = args[3]
+    emojis_file = args[4]
+    # phrase_file = args[4]
+    data_path_in = args[5]
+    data_path_out = args[6]
+
+    rate_threshold = float(args[7])
+    words_num = int(args[8])
+    phrase_num = int(args[9])
+    train_data_num = int(args[10])
+    dev_data_num = int(args[11])
+    test_data_num = int(args[12])
 
     data_producer = TrainDataProducer()
     data_producer.combine_words_keys_pair(en_word_keys_pair_map, es_word_keys_pair_map)
-    data_producer.combine_vocab(vocab_path, en_path_in, es_path_in, en_es_path_in)
-    data_producer.save_vocab_files(en_es_path_out)
 
-    data_producer.convert_to_ids(en_es_path_out)
+    data_producer.emojis_dict = data_producer.load_vocab(emojis_file, "\t+", "emojis")
+    # data_producer.phrase_dict = data_producer.load_vocab(phrase_file, "##", "phrase")
+    data_producer.full_words_dict = data_producer.load_vocab(words_dict_file, "\t+", "full")
 
+    data_producer.calc_words_freq_all_data(data_path_in)
+    data_producer.combine_words_and_phrase_dict(words_num, phrase_num)
+    data_producer.convert_data(data_path_in, data_path_out, rate_threshold, train_data_num, dev_data_num, test_data_num)
 
+    data_producer.save_vocab_files(data_path_out)
+    data_producer.convert_to_ids(data_path_out)
 
 
 
