@@ -313,7 +313,7 @@ class TrainDataProducer:
         return
 
     def convert_data(self, data_path_in, data_path_out, rate_threshold,
-                           train_data_num, dev_data_num, test_data_num):
+                     train_data_num, dev_data_num, test_data_num):
         root_path = data_path_in
         files_list = os.listdir(root_path)
         train_rate = float(train_data_num / self.line_num)
@@ -688,12 +688,13 @@ if __name__ == "__main__":
     en_path_in = args[1]
     es_path_in = args[2]
     en_es_path_in = args[3]
-    en_word_keys_pair_map = args[4]
-    es_word_keys_pair_map = args[5]
-    en_es_path_out = args[6]
-    vocab_path = args[7]
-
+    emojis_file = args[4]
+    en_word_keys_pair_map = args[5]
+    es_word_keys_pair_map = args[6]
+    en_es_path_out = args[7]
+    vocab_path = args[8]
     data_producer = TrainDataProducer()
+    data_producer.emojis_dict = data_producer.load_vocab(emojis_file, "\t+", -1, "emojis")
     data_producer.combine_words_keys_pair(en_word_keys_pair_map, es_word_keys_pair_map)
     data_producer.combine_vocab(vocab_path, en_path_in, es_path_in, en_es_path_in)
     data_producer.save_vocab_files(en_es_path_out)
