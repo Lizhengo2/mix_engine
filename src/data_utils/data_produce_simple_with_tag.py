@@ -13,8 +13,8 @@ class TrainDataProducer:
 
     def __init__(self):
 
-        #self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
-        self.word_regex = "^[a-zA-Z']+$"
+        self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
+        #self.word_regex = "^[a-zA-Z']+$"
         self.num_regex = "^[+-]*[0-9]+.*[0-9]*$"
         self.pun_regex = "^[^a-zA-Z0-9']*$"
 
@@ -459,8 +459,8 @@ class TrainDataProducer:
                     ids_list.append(self.in_word_id_dict[word])
                 elif word.lower() in self.in_word_id_dict:
                     ids_list.append(self.in_word_id_dict[word.lower()])
-                elif word in self.lish_full_words_dict or word.lower() in self.lish_full_words_dict:
-                    ids_list.append(self.in_word_id_dict[self.unk_lang_flag])
+#                elif word in self.lish_full_words_dict or word.lower() in self.lish_full_words_dict:
+#                    ids_list.append(self.in_word_id_dict[self.unk_lang_flag])
                 elif word in self.emojis_dict:
                     ids_list.append(self.in_word_id_dict[self.emoji_flag])
                 elif re.match(self.num_regex, word):
@@ -483,8 +483,8 @@ class TrainDataProducer:
                     ids_list.append(self.out_word_id_dict[word])
                 elif word.lower() in self.out_word_id_dict:
                     ids_list.append(self.out_word_id_dict[word.lower()])
-                elif word in self.lish_full_words_dict or word.lower() in self.lish_full_words_dict:
-                    ids_list.append(self.out_word_id_dict[self.unk_lang_flag])
+ #               elif word in self.lish_full_words_dict or word.lower() in self.lish_full_words_dict:
+ #                   ids_list.append(self.out_word_id_dict[self.unk_lang_flag])
                 elif word in self.big_words_set and word not in self.emojis_dict:
                     ids_list.append(self.out_word_id_dict[self.und_flag])
                 else:

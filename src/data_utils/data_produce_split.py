@@ -242,7 +242,15 @@ class TrainDataProducer:
             keys_dict = words_keys_pair[word]
             freq_list = list(keys_dict.values())
             new_key_set = list(keys_dict.keys())
-
+            has_correct_word = False
+            for key in list(keys_dict.keys()):
+                if key == word.lower():
+                    has_correct_word = True
+                    break
+            if not has_correct_word and " " not in word and "'" not in word:
+                new_key_set.insert(0, word.lower())
+                sum_freq = float(sum(freq_list))
+                freq_list.insert(0, int(sum_freq * 7 / 3))
             num_samples = float(sum(freq_list))
             num_scale = [sum(freq_list[:i + 1]) / num_samples for i in range(len(freq_list))]
             words_keys_pair[word] = (new_key_set, num_scale)

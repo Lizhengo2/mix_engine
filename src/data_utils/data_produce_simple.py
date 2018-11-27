@@ -14,7 +14,7 @@ class TrainDataProducer:
     def __init__(self):
 
         self.word_regex = "^[a-zA-Z'áéíóúüñ]+$"
-      #  self.word_regex = "^[a-zA-Z']+$"
+     #   self.word_regex = "^[a-zA-Z']+$"
         self.num_regex = "^[+-]*[0-9]+.*[0-9]*$"
         self.pun_regex = "^[^a-zA-Z0-9']*$"
 
